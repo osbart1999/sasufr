@@ -1,0 +1,10 @@
+Django
+numpy
+opencv-contrib-python
+opencv-python
+pandas
+Pillow
+python-dateutil
+pytz
+six
+sqlparse

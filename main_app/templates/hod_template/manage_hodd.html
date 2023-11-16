@@ -1,0 +1,60 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block content %}
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">{{page_title}}</h3>
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body">
+                        <table id="example2" class="table table-bordered table-hover">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Full Name</th>
+                                    <th>Email</th>
+                                    <th>Gender</th>
+                                    <th>Department</th>
+                                    <th>Avatar</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for hodd in allHodd %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{hodd.last_name}}, {{hodd.first_name}}</td>
+                                    <td>{{hodd.email}}</td>
+                                    <td>{{hodd.gender}}</td>
+                                    <td>{{hodd.hodd.department.name}}</td>
+                                    <td>
+                                        {% if hodd.profile_pic == ""  %}
+                                        No Image
+                                        {% else %}
+                                        <img class="img img-fluid mb-2" height="56" width="56"
+                                            src="{{hodd.profile_pic}}" alt="">
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'edit_hodd' hodd.hodd.id %}" class="btn btn-info">Edit</a> - 
+                                        <a href="{% url 'delete_hodd' hodd.hodd.id %}" class="btn btn-danger" onclick="return confirm('Are you sure about this ?')">Delete</a>
+                                    
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
