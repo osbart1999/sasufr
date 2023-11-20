@@ -133,9 +133,22 @@ def save_attendance(request):
 
     return HttpResponse("OK")
 
+
+
+
+
+
+
+# ************************************************************Functions Start**********************************
+
+
 def add_student_images(request):
+
+    
     if request.POST:
         stdnt = Test_Student.objects.filter(first_name='Kaboy', last_name='Bruno').last()
+
+        # student = Student.objects.get(user= request.user)
         print(stdnt)
 
         images = request.FILES.getlist('images')
@@ -156,7 +169,7 @@ def add_student_images(request):
                 print('refused!!')
     else:
         pass
-        # train_recorgniser()
+        # train_recorgniser()    
     return render(request, 'staff_template/add_student_images.html')
 
 
@@ -209,7 +222,6 @@ def make_attendance(request):
             url = attendnc.file.url
             att_id = attendnc.id
 
-            analyse_faces(str(url), att_id)
             message = 'Attendance Successfully made!'
             context['message'] = message
         except:
@@ -238,10 +250,12 @@ def anylse_all_faces(request):
 
     
     # get current attendance
-    cur_attendance = Test_Attendance.objects.get(id=1)
+    cur_attendance = Test_Attendance.objects.get(id=1)              #Change This
 
     # get students from db
     students = Test_Student.objects.all()
+
+
     print('Students', students)
     ids = []
 
@@ -253,7 +267,8 @@ def anylse_all_faces(request):
 
 
     # Extract Images from  a video
-    cap = cv.VideoCapture('/home/jimson/Desktop/new.mp4')
+    cap = cv.VideoCapture(str(cur_attendance.file.url))
+
     minWin = 0.1*cap.get(3) 
     minHei = 0.1*cap.get(3) 
 
@@ -285,38 +300,43 @@ def anylse_all_faces(request):
             for id in ids:
                 print(id)
 
-                id, confidence = recorgniser.predict(frame[y:y+h,x:x+w]) #.......
+                id, confidence = recorgniser.predict(gray[y:y+h,x:x+w]) #.......
 
                 print('confidence...', confidence)
 
                 if confidence < 100 > 40:
                     # id = students_names[id]
                     confidence = "{0}%".format(round(100 - confidence))
+
                     # create student attendance object here
                     cur_student = Test_Student.objects.get(id=id)
-                    Test_Student_Attendance.objects.create(student=cur_student, attendance=cur_attendance)
-                    print(cur_student)
+                    cur_date = datetime.today()
+                    try:
+                        std_exists = Test_Student_Attendance.objects.filter(student=cur_student, date_taken=cur_date)
+                        if std_exists:
+                            pass
+                        else:
+                            Test_Student_Attendance.objects.create(student=cur_student, attendance=cur_attendance, date_taken=cur_date)
+
+                    except:
+                        pass
+
 
                 else:
                     id = "Unknown"
                     confidence = " {0}%".format(round(100 - confidence))
-                    print('No student ')
-                    # create a message here 
-
-            
-            cv.imshow('camera', frame)
-            k = cv.waitKey(10) & 0xFF
-        
-        if k == 27:
-            break
-    cap.release()
-    cv.destroyAllWindows()
+                    # print('No student ')
+        break
 
     data = {
-
+        'message' : 'Finished Taking attendnce....'
     }
 
     return JsonResponse(data)
+
+# ************************************************************Functions End**********************************
+
+
 
 
 

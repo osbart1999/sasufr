@@ -9,6 +9,10 @@
             <p>{{message}}</p>
           </div>
         {% endif %}
+
+        <div class="alert alert-info">
+            <p id="message"></p>
+          </div>
         <legend>Choose Attendance</legend>
         <form action="" method="POST" class="form" enctype="multipart/form-data">
             {% csrf_token %}
@@ -44,6 +48,9 @@
 
                 pay_data = {}
 
+                var message_container = document.getElementById('message')
+
+
 
                 fetch('/try-attendance', {
                     method: 'POST',
@@ -63,7 +70,7 @@
                 
                 .then(data => {
                     console.log(data)
-                    alert('The data was submitted successfully')
+                    message_container.innerText = data.message
                     
                 })
 

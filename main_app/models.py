@@ -350,7 +350,10 @@ class Test_Attendance(models.Model):
 class Test_Student_Attendance(models.Model):
     student  = models.ForeignKey(Test_Student, on_delete=models.CASCADE, related_name='attendanciees')
     attendance  = models.ForeignKey(Test_Attendance, on_delete=models.CASCADE, related_name='attendanciees')
-
+    date_taken = models.DateField(null=True)
+    
     def __str__(self):
         return self.student
+
+
     
