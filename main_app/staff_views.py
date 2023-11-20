@@ -27,6 +27,9 @@ from .forms import *
 from .models import *
 
 
+from .analyse import *
+
+
 def staff_home(request):
     staff = get_object_or_404(Staff, admin=request.user)
     total_students = Student.objects.filter(course=staff.course).count()
@@ -130,34 +133,191 @@ def save_attendance(request):
 
     return HttpResponse("OK")
 
+def add_student_images(request):
+    if request.POST:
+        stdnt = Test_Student.objects.filter(first_name='Kaboy', last_name='Bruno').last()
+        print(stdnt)
+
+        images = request.FILES.getlist('images')
+        image_no = 0
+        for image in images:
+            image_no += 1
+            new_image = Test_Student_Image()
+            new_image.image = image
+            new_image.image_no = image_no
+            new_image.student = stdnt
+
+
+            try:
+                new_image.save()
+
+                print('saved...')
+            except:
+                print('refused!!')
+    else:
+        pass
+        # train_recorgniser()
+    return render(request, 'staff_template/add_student_images.html')
+
 
 def collect_attendance(request):
     staff = get_object_or_404(Staff, admin=request.user)
     subjects = Subject.objects.filter(staff_id=staff)
     sessions = Session.objects.all()
+    
     context = {
         'subjects': subjects,
         'sessions': sessions,
         'page_title': 'Take_Attendance'
     }
     if request.POST:
-        subject = request.POST.get('subject')
-        session = request.POST.get('session')
+        new_attendance = Test_Attendance()
+
+        new_attendance.subject = request.POST.get('subject')
+        new_attendance.session = request.POST.get('session')
+        new_attendance.date = datetime.today()
         
-        video = request.FILES.get('video')
-        image = request.FILES.get('image')
-        print('subject')
+        new_attendance.file = request.FILES.get('video')
+
+        # image = request.FILES.get('image')
         
         try:
+            new_attendance.save()
             print('it worked')
         except:
-            message = 'Please input a video or an image!!'
+            message = 'Could not save your attendance'
             context['message'] = message
     else:
         pass
     
     return render(request, 'staff_template/staff_take_attendance.html', context)
         
+
+
+def make_attendance(request):
+    attendances = Test_Attendance.objects.all().order_by('-created_at')
+    print(attendances)
+    context = {
+
+        'attendances': attendances,
+        'title' : 'Make Attendance'
+    }
+    if request.POST:
+        attnd_id = request.POST.get('attendance')
+        attendnc = Test_Attendance.objects.get(id=attnd_id)
+        try:
+            url = attendnc.file.url
+            att_id = attendnc.id
+
+            analyse_faces(str(url), att_id)
+            message = 'Attendance Successfully made!'
+            context['message'] = message
+        except:
+            message = 'Could not analyse the video, please debug'
+            context['message'] = message
+    else:
+        pass
+    return render(request, 'staff_template/make_attendance.html', context)
+
+
+
+def anylse_all_faces(request):
+
+    attendances = Test_Attendance.objects.all().order_by('-created_at')
+    # settings for face recorgnition algorithms
+    dataset_path = os.path.join(settings.BASE_DIR, 'media/training')
+    detector_path = os.path.join(settings.BASE_DIR, 'cascades/haarcascade_frontalface_default.xml')
+    trainer_path = os.path.join(settings.BASE_DIR, 'trainer/trainer.yml')
+
+    # initialise detector and trainer files
+    detector = cv.CascadeClassifier(detector_path)
+    recorgniser = cv.face.LBPHFaceRecognizer_create()
+    recorgniser.read(trainer_path)
+
+    attendance = Attendance.objects.filter()
+
+    
+    # get current attendance
+    cur_attendance = Test_Attendance.objects.get(id=1)
+
+    # get students from db
+    students = Test_Student.objects.all()
+    print('Students', students)
+    ids = []
+
+    for student in students:
+        ids.append(student.id)
+    
+    print('ids...', ids)
+        # print(student)
+
+
+    # Extract Images from  a video
+    cap = cv.VideoCapture('/home/jimson/Desktop/new.mp4')
+    minWin = 0.1*cap.get(3) 
+    minHei = 0.1*cap.get(3) 
+
+    print('video..', cap)
+
+
+    
+    print(attendances)
+    while True:
+        ret, frame = cap.read()
+        gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+        # faces = face_recognition(frame)
+
+
+        faces = detector.detectMultiScale(
+            gray,
+            scaleFactor = 1.2,
+            minNeighbors = 5,
+            minSize = (int(minWin), int(minHei)),
+        )
+        print('faces..', faces)
+
+
+        for (x,y,h,w) in faces:
+            cv.rectangle(frame, (x,y), (x+w, y+h), (0,255,0), 4)
+            print('intialising faces....')
+            print('face', (x,y,h,w))
+            id = 0
+            for id in ids:
+                print(id)
+
+                id, confidence = recorgniser.predict(frame[y:y+h,x:x+w]) #.......
+
+                print('confidence...', confidence)
+
+                if confidence < 100 > 40:
+                    # id = students_names[id]
+                    confidence = "{0}%".format(round(100 - confidence))
+                    # create student attendance object here
+                    cur_student = Test_Student.objects.get(id=id)
+                    Test_Student_Attendance.objects.create(student=cur_student, attendance=cur_attendance)
+                    print(cur_student)
+
+                else:
+                    id = "Unknown"
+                    confidence = " {0}%".format(round(100 - confidence))
+                    print('No student ')
+                    # create a message here 
+
+            
+            cv.imshow('camera', frame)
+            k = cv.waitKey(10) & 0xFF
+        
+        if k == 27:
+            break
+    cap.release()
+    cv.destroyAllWindows()
+
+    data = {
+
+    }
+
+    return JsonResponse(data)
+
 
 
 def staff_update_attendance(request):

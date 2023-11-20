@@ -238,6 +238,11 @@ urlpatterns = [
     path('student/upload/image/', student_views.upload_student_images,
          name='upload_student_images'),
     
-    path('collect-attendance', staff_views.collect_attendance, name='collect')
+
+
+    path('collect-attendance', staff_views.collect_attendance, name='collect'),
+    path('add-student-images', staff_views.add_student_images, name='add_images'),
+    path('make-attendance', staff_views.make_attendance, name='make_attendance'),
+    path('try-attendance', staff_views.anylse_all_faces, name='anylse_all_faces'),
 
 ]

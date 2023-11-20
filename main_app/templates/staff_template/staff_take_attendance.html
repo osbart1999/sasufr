@@ -34,7 +34,8 @@
                             <select name="subject" class="form-control" id='subject'>
                                 <option value="">----</option>
                                 {% for subject in subjects  %}
-                                <option value="{{subject.id}}">{{subject.name}}</option>
+                                {% comment %} <option value="{{subject.id}}">{{subject.name}}</option> {% endcomment %}
+                                <option value="{{subject.name}}">{{subject.name}}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -45,7 +46,8 @@
                             <select name="session" id='session' class="form-control">
                                 <option value="">----</option>
                                 {% for session in sessions  %}
-                                <option value="{{session.id}}">{{session}} </option>
+                                {% comment %} <option value="{{session.id}}">{{session}} </option> {% endcomment %}
+                                <option value="{{session.name}}">{{session}} </option>
                                 {% endfor %}
                             </select>
                         </div>

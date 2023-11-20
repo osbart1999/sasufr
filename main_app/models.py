@@ -296,3 +296,61 @@ class UploadedFile(models.Model):
     student = models.ForeignKey(Student, on_delete=models.DO_NOTHING, null=True, blank=False)
     file = models.FileField(upload_to='training/')
     uploaded_at = models.DateTimeField(auto_now_add=True)
+
+
+
+
+# &&&&&&&&&&&&&&&&&&& face recorgnition test models  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+class Test_Student(models.Model):
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    course = models.CharField(max_length=100)
+
+    def username(self):
+        return self.first_name + self.last_name
+    
+    def __str__(self):
+        return f'{self.first_name} {self.last_name}'
+    
+
+
+def photo_path(instance, filename):
+    ext = filename.split('.')[-1]
+    imageid= instance.image_no,
+    username= instance.student.username()
+    userid= instance.student.id
+    # file_name = '{username}_img.{imageid}.{ext}'.format(username= instance.student.username, imageid= instance.pk, ext= ext)
+    file_name = f'{username}.{userid}.{imageid}.{ext}'
+    return os.path.join('training', file_name)
+            
+
+class Test_Student_Image(models.Model):
+    student = models.ForeignKey(Test_Student, on_delete=models.CASCADE, related_name='student_photos')
+    image = models.ImageField(upload_to=photo_path)
+    image_no = models.IntegerField(null=True)
+
+    def __str__(self):
+        return self.student
+    
+    
+
+class Test_Attendance(models.Model):
+    session = models.CharField(max_length=200)
+    subject = models.CharField(max_length=200)
+    date = models.DateField()
+    file = models.FileField(upload_to='attendance_files/', null=True, blank=True)  # Change 'attendance_files/' to your desired upload directory
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.session
+    
+
+class Test_Student_Attendance(models.Model):
+    student  = models.ForeignKey(Test_Student, on_delete=models.CASCADE, related_name='attendanciees')
+    attendance  = models.ForeignKey(Test_Attendance, on_delete=models.CASCADE, related_name='attendanciees')
+
+    def __str__(self):
+        return self.student
+    
