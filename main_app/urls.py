@@ -193,11 +193,10 @@ urlpatterns = [
     path("staff/feedback/", staff_views.staff_feedback, name='staff_feedback'),
     path("staff/view/profile/", staff_views.staff_view_profile,
          name='staff_view_profile'),
-    path("staff/attendance/take/", staff_views.staff_take_attendance,
-         name='staff_take_attendance'),
+    
     path("staff/attendance/update/", staff_views.staff_update_attendance,
          name='staff_update_attendance'),
-    path("staff/get_students/", staff_views.get_students, name='get_students'),
+    
     path("staff/attendance/fetch/", staff_views.get_student_attendance,
          name='get_student_attendance'),
     path("staff/attendance/save/",
@@ -241,7 +240,7 @@ urlpatterns = [
 
 
     path('collect-attendance', staff_views.collect_attendance, name='collect'),
-    path('add-student-images', staff_views.add_student_images, name='add_images'),
+    #path('add-student-images', staff_views.add_student_images, name='add_images'),
     path('make-attendance', staff_views.make_attendance, name='make_attendance'),
     path('try-attendance', staff_views.anylse_all_faces, name='anylse_all_faces'),
 

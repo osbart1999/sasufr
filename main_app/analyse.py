@@ -4,7 +4,7 @@ import os
 import time
 from datetime import *
 from PIL import Image
-from main_app.models import Test_Attendance, Test_Student, Test_Student_Attendance, Test_Student_Image
+from main_app.models import Attendance, Student, StudentAttendance, StudentFaceImage
 from django.conf import settings
 import shutil
 # import face_recognition

@@ -301,7 +301,7 @@ class AttendanceForm(forms.ModelForm):
 class StudentFaceImageForm(forms.ModelForm):
     class Meta:
         model = StudentFaceImage
-        fields = ['face_image']
+        fields = ['image']
 
 
 class MultipleFileInput(forms.ClearableFileInput):

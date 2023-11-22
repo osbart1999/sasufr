@@ -15,7 +15,7 @@ from .detector import encode_known_faces
 
 from .forms import UploadStudentImagesForm
 from subprocess import run
-from .models import UploadedFile
+
 from .forms import *
 from .models import *
 
@@ -1238,7 +1238,25 @@ def delete_student(request, student_id):
     student.delete()
     messages.success(request, "Student deleted successfully!")
     return redirect(reverse('manage_student'))
+    """
 
+def delete_student(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+
+    # Check for related StudentFaceImage instances
+    student_images = StudentFaceImage.objects.filter(student=student)
+    
+    # Delete or disassociate related StudentFaceImage instances
+    for image in student_images:
+        # Delete or disassociate operations here
+        image.delete()  # For example, delete the related images
+
+    # Once related objects are handled, delete the student
+    student.delete()
+    messages.success(request, "Student deleted successfully!")
+    return redirect(reverse('manage_student'))
+
+"""
 def delete_faculty(request, faculty_id):
     faculty = get_object_or_404(Faculty, id=faculty_id)
     try:

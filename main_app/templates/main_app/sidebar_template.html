@@ -727,9 +727,9 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                {% url 'staff_take_attendance' as staff_take_attendance %}
-                                <a href="{{staff_take_attendance}}"
-                                    class="nav-link {% if staff_take_attendance == request.path %} active {% endif %}">
+                                {% url 'collect' as collect %}
+                                <a href="{{collect}}"
+                                    class="nav-link {% if collect == request.path %} active {% endif %}">
                                     <i class="nav-icon fas fa-calendar-alt"></i>
                                     <p>
                                         Take Attendance
@@ -738,9 +738,9 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                {% url 'absent_students' as absent_students %}
-                                <a href="{{absent_students}}"
-                                    class="nav-link {% if absent_students == request.path %} active {% endif %}">
+                                {% url 'make_attendance' as make_attendance %}
+                                <a href="{{make_attendance}}"
+                                    class="nav-link {% if make_attendance == request.path %} active {% endif %}">
                                     <i class="nav-icon fas fa-calendar-alt"></i>
                                     <p>
                                         Make Attendance

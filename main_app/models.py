@@ -88,6 +88,7 @@ class Course(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
+    
 
     def __str__(self):
         return self.name
@@ -98,18 +99,35 @@ class Student(models.Model):
     course = models.ForeignKey('Course', on_delete=models.DO_NOTHING, null=True, blank=False)
     session = models.ForeignKey('Session', on_delete=models.DO_NOTHING, null=True)
     
+    def username(self):
+        return self.admin.first_name + self.admin.last_name
+    
     def __str__(self):
         return self.admin.last_name + " " + self.admin.first_name
     
 
-
+def photo_path(instance, filename):
+    ext = filename.split('.')[-1]
+    imageid= instance.image_no
+    username= instance.student.username()
+    userid= instance.student.admin.id
+    # file_name = '{username}_img.{imageid}.{ext}'.format(username= instance.student.username, imageid= instance.pk, ext= ext)
+    file_name = f'{username}.{userid}.{imageid}.{ext}'
+    return os.path.join('training', file_name)
+            
 
 class StudentFaceImage(models.Model):
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='face_images')
-    face_image = models.ImageField(upload_to='student_capture_faces/', null=True, blank=True)
+    student = models.ForeignKey(Student, on_delete=models.DO_NOTHING, related_name='student_photos')
+    image = models.ImageField(upload_to=photo_path, null=True, blank=False)
+    image_no = models.IntegerField(null=True)
 
     def __str__(self):
-        return f"Face Image of {self.student.admin.get_full_name()}"
+        return self.student
+    
+    
+
+
+
     
 
 class Dean(models.Model):
@@ -144,7 +162,26 @@ class Subject(models.Model):
     def __str__(self):
         return self.name
 
+class Attendance(models.Model):
+    session = models.CharField(max_length=200)
+    subject = models.CharField(max_length=200)
+    date = models.DateField()
+    file = models.FileField(upload_to='attendance_files/', null=True, blank=True)  # Change 'attendance_files/' to your desired upload directory
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
+    def __str__(self):
+        return self.session
+
+class StudentAttendance(models.Model):
+    student  = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='attendanciees')
+    attendance  = models.ForeignKey(Attendance, on_delete=models.CASCADE, related_name='attendanciees')
+    date_taken = models.DateField(null=True)
+    
+    def __str__(self):
+        return self.student    
+
+"""
 class Attendance(models.Model):
     session = models.ForeignKey(Session, on_delete=models.DO_NOTHING)
     subject = models.ForeignKey(Subject, on_delete=models.DO_NOTHING)
@@ -157,7 +194,7 @@ class StudentAttendance(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='attendance')
     attendance = models.ForeignKey(Attendance, on_delete=models.CASCADE, related_name='attendance')
 
-
+"""
 class AttendanceReport(models.Model):
     student = models.ForeignKey(Student, on_delete=models.DO_NOTHING)
     attendance = models.ForeignKey(Attendance, on_delete=models.CASCADE)
@@ -292,16 +329,11 @@ def save_user_profile(sender, instance, **kwargs):
         instance.student.save()    
         
  
-class UploadedFile(models.Model):
-    student = models.ForeignKey(Student, on_delete=models.DO_NOTHING, null=True, blank=False)
-    file = models.FileField(upload_to='training/')
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-
 
 
 
 # &&&&&&&&&&&&&&&&&&& face recorgnition test models  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-
+"""
 class Test_Student(models.Model):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
@@ -334,26 +366,9 @@ class Test_Student_Image(models.Model):
         return self.student
     
     
+"""
 
-class Test_Attendance(models.Model):
-    session = models.CharField(max_length=200)
-    subject = models.CharField(max_length=200)
-    date = models.DateField()
-    file = models.FileField(upload_to='attendance_files/', null=True, blank=True)  # Change 'attendance_files/' to your desired upload directory
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
-        return self.session
-    
-
-class Test_Student_Attendance(models.Model):
-    student  = models.ForeignKey(Test_Student, on_delete=models.CASCADE, related_name='attendanciees')
-    attendance  = models.ForeignKey(Test_Attendance, on_delete=models.CASCADE, related_name='attendanciees')
-    date_taken = models.DateField(null=True)
-    
-    def __str__(self):
-        return self.student
 
 
     

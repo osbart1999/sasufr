@@ -56,7 +56,7 @@ def staff_home(request):
     return render(request, 'staff_template/home_content.html', context)
 
 
-
+"""
 
 def staff_select_subject_and_session(request):
     staff = get_object_or_404(Staff, admin=request.user)
@@ -71,27 +71,6 @@ def staff_select_subject_and_session(request):
     return render(request, 'staff_template/staff_take_attendance.html', context)
 
 
-
-
-@csrf_exempt
-def get_students(request):
-    subject_id = request.POST.get('subject')
-    session_id = request.POST.get('session')
-    try:
-        subject = get_object_or_404(Subject, id=subject_id)
-        session = get_object_or_404(Session, id=session_id)
-        students = Student.objects.filter(
-            course_id=subject.course.id, session=session)
-        student_data = []
-        for student in students:
-            data = {
-                    "id": student.id,
-                    "name": student.admin.last_name + " " + student.admin.first_name
-                    }
-            student_data.append(data)
-        return JsonResponse(json.dumps(student_data), content_type='application/json', safe=False)
-    except Exception as e:
-        return e    
     
 @csrf_exempt
 def staff_take_attendance(request):
@@ -109,7 +88,7 @@ def staff_take_attendance(request):
         return JsonResponse({'success': False, 'message': 'Invalid request.'})
 
 
-
+"""
 
 @csrf_exempt
 def save_attendance(request):
@@ -142,35 +121,6 @@ def save_attendance(request):
 # ************************************************************Functions Start**********************************
 
 
-def add_student_images(request):
-
-    
-    if request.POST:
-        stdnt = Test_Student.objects.filter(first_name='Kaboy', last_name='Bruno').last()
-
-        # student = Student.objects.get(user= request.user)
-        print(stdnt)
-
-        images = request.FILES.getlist('images')
-        image_no = 0
-        for image in images:
-            image_no += 1
-            new_image = Test_Student_Image()
-            new_image.image = image
-            new_image.image_no = image_no
-            new_image.student = stdnt
-
-
-            try:
-                new_image.save()
-
-                print('saved...')
-            except:
-                print('refused!!')
-    else:
-        pass
-        # train_recorgniser()    
-    return render(request, 'staff_template/add_student_images.html')
 
 
 def collect_attendance(request):
@@ -184,7 +134,7 @@ def collect_attendance(request):
         'page_title': 'Take_Attendance'
     }
     if request.POST:
-        new_attendance = Test_Attendance()
+        new_attendance = Attendance()
 
         new_attendance.subject = request.POST.get('subject')
         new_attendance.session = request.POST.get('session')
@@ -208,7 +158,7 @@ def collect_attendance(request):
 
 
 def make_attendance(request):
-    attendances = Test_Attendance.objects.all().order_by('-created_at')
+    attendances = Attendance.objects.all().order_by('-created_at')
     print(attendances)
     context = {
 
@@ -217,13 +167,14 @@ def make_attendance(request):
     }
     if request.POST:
         attnd_id = request.POST.get('attendance')
-        attendnc = Test_Attendance.objects.get(id=attnd_id)
+        attendnc = Attendance.objects.get(id=attnd_id)
         try:
             url = attendnc.file.url
             att_id = attendnc.id
-
+            
             message = 'Attendance Successfully made!'
             context['message'] = message
+            
         except:
             message = 'Could not analyse the video, please debug'
             context['message'] = message
@@ -233,9 +184,10 @@ def make_attendance(request):
 
 
 
+    
 def anylse_all_faces(request):
 
-    attendances = Test_Attendance.objects.all().order_by('-created_at')
+    attendances = Attendance.objects.all().order_by('-created_at')
     # settings for face recorgnition algorithms
     dataset_path = os.path.join(settings.BASE_DIR, 'media/training')
     detector_path = os.path.join(settings.BASE_DIR, 'cascades/haarcascade_frontalface_default.xml')
@@ -250,10 +202,16 @@ def anylse_all_faces(request):
 
     
     # get current attendance
-    cur_attendance = Test_Attendance.objects.get(id=1)              #Change This
-
+                  #Change This
+    """
     # get students from db
-    students = Test_Student.objects.all()
+    subject_id = request.POST.get('subject')
+    session_id = request.POST.get('session')
+    subject = get_object_or_404(Subject, id=subject_id)
+    session = get_object_or_404(Session, id=session_id)
+    students = Student.objects.filter(course_id=subject.course.id, session=session)
+    """
+    students = Student.objects.all()
 
 
     print('Students', students)
@@ -266,9 +224,23 @@ def anylse_all_faces(request):
         # print(student)
 
 
+    
+    cur_attendance = Attendance.objects.get(id=1)
+    
     # Extract Images from  a video
-    cap = cv.VideoCapture(str(cur_attendance.file.url))
+    sub = cur_attendance.subject
+    ses = cur_attendance.session
+    dat = cur_attendance.date
+    fil = cur_attendance.file
+    
+    print(sub)
+    print(ses)
+    print(dat)
+    print(fil)
 
+    
+    cap = cv.VideoCapture(str(cur_attendance.file))    
+    
     minWin = 0.1*cap.get(3) 
     minHei = 0.1*cap.get(3) 
 
@@ -309,14 +281,14 @@ def anylse_all_faces(request):
                     confidence = "{0}%".format(round(100 - confidence))
 
                     # create student attendance object here
-                    cur_student = Test_Student.objects.get(id=id)
+                    cur_student = Student.objects.get(id=id)
                     cur_date = datetime.today()
                     try:
-                        std_exists = Test_Student_Attendance.objects.filter(student=cur_student, date_taken=cur_date)
+                        std_exists = StudentAttendance.objects.filter(student=cur_student, date_taken=cur_date)
                         if std_exists:
                             pass
                         else:
-                            Test_Student_Attendance.objects.create(student=cur_student, attendance=cur_attendance, date_taken=cur_date)
+                            StudentAttendance.objects.create(student=cur_student, attendance=cur_attendance, date_taken=cur_date)
 
                     except:
                         pass
@@ -333,7 +305,7 @@ def anylse_all_faces(request):
     }
 
     return JsonResponse(data)
-
+    
 # ************************************************************Functions End**********************************
 
 

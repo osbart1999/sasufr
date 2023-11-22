@@ -20,6 +20,7 @@ from django.views.decorators.csrf import csrf_exempt
 import numpy as np
 import pandas as pd
 import requests
+from main_app.analyse import train_recorgniser
 from main_app.detector import encode_known_faces
 
 from sasufr.settings import BASE_DIR
@@ -154,34 +155,39 @@ def student_view_profile(request):
 # Remove the upload_student_images function and related imports
 # Modify the function to return the current email
 
+
 def upload_student_images(request):
-    files = UploadedFile.objects.all()
-    student = get_object_or_404(Student, admin=request.user)
 
-    if request.method == 'POST':
-        form = UploadStudentImagesForm(request.POST, request.FILES)
-        if form.is_valid():
-            # Encode known faces
-            #encode_known_faces()
+    
+    if request.POST:
+        #stdnt = Student.objects.filter(first_name='Kaboy', last_name='Bruno').last()
 
-            # Get the student email using the new function
-            student_email = student.admin.email
-            count = 1
+        student = get_object_or_404(Student, admin=request.user)
+        print(student)
 
-            for uploaded_file in request.FILES.getlist('files'):
-                # Rename each image with the student email
-                fs =  fs = FileSystemStorage(location=f"{settings.MEDIA_ROOT}/training")
-                filename = fs.save(f"{student_email}_{count}.jpg", uploaded_file)
-                count += 1
-                # Save the uploaded file to the database
-                UploadedFile.objects.create(file=filename)
+        images = request.FILES.getlist('images')
+        image_no = 0
+        for image in images:
+            image_no += 1
+            new_image = StudentFaceImage()
+            new_image.image = image
+            new_image.image_no = image_no
+            new_image.student = student
 
-            return redirect('upload_student_images')
 
+            try:
+                new_image.save()
+
+                print('saved...')
+            except:
+                print('refused!!')
     else:
-        form = UploadStudentImagesForm()
+        pass
+    
+    train_recorgniser()    
+    return render(request, 'student_template/add_student_images.html')
 
-    return render(request, 'student_template/image_upload.html', {'form': form, 'files': files})
+
 
 def rename_images_in_training_folder(old_email, new_email):
     base_directory = 'training'
