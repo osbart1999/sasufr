@@ -236,17 +236,27 @@ def anylse_all_faces(request):
     # Extract Images from  a video
 
     video_path = videos_path(cur_attendance.file.url)
+    
 
-    video_rel_path = video_path.strip('/media')
-
-    final_path = 'a'+video_rel_path
-
+    video_rel_path = video_path.lstrip('/F:media')
+    final_path = '/a'+video_rel_path
     media_root = settings.MEDIA_ROOT
+    media_pathm = media_root.replace('\\', '/')
+    new_path = media_pathm + final_path
 
-    full_path = os.path.join(media_root,final_path)
+    
+    
 
 
-    cap = cv.VideoCapture(str(full_path))
+    full_path = os.path.join(media_root, video_rel_path)
+    
+    print(media_pathm)
+    print(video_rel_path)
+    print(new_path)
+    
+# F:\project\final\sasufr\media\attendance_files\fff_S3jtXPu.mp4
+
+    cap = cv.VideoCapture(str(new_path))
     
     minWin = 0.1*cap.get(3) 
     minHei = 0.1*cap.get(3) 
