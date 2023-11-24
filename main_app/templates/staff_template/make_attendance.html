@@ -4,80 +4,89 @@
 {% block content %}
 <section class="content">
     <div class="container">
-        {% if message %}
-          <div class="alert alert-primary">
-            <p>{{message}}</p>
-          </div>
-        {% endif %}
-
-        <div class="alert alert-info">
-            <p id="message"></p>
-          </div>
         <legend>Choose Attendance</legend>
-        <form action="" method="POST" class="form" enctype="multipart/form-data">
             {% csrf_token %}
-            <select name="attendance" id="">
+            <select name="attendance" id="attendance">
                 {% for attend in attendances %}
-                  <option value="{{attend.id}}">{{attend.session}}</option>
+                  <option value="{{attend.id}}">{{attend.attendance_name}}</option>
                 {% endfor %}
 
             </select>
             <br>
-            <button class="btn btn-primary" type="submit">Make Attendance</button>
+            <!-- <button class="btn btn-primary" type="submit">Make Attendance</button> -->
         </form>
 
-        <button onclick="analyse()" class="btn btn-warning" style="margin: 2%;">Analyse Faces</button>
-        <script>
-            const analyse = ()=>{
-                function getCookie(name) {
-                    let cookieValue = null;
-                    if (document.cookie && document.cookie !== '') {
-                        const cookies = document.cookie.split(';');
-                        for (let i = 0; i < cookies.length; i++) {
-                            const cookie = cookies[i].trim();
-                            // Does this cookie string begin with the name we want?
-                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                                break;
-                            }
-                        }
-                    }
-                    return cookieValue;
-                }
-                var csrftoken = getCookie('csrftoken');
-
-                pay_data = {}
-
-                var message_container = document.getElementById('message')
-
-
-
-                fetch('/try-attendance', {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRFToken': csrftoken
-                    },
-                    
-                    body: JSON.stringify({'pay_data':pay_data})
-                })
-                .then(response => {
-                    return response.json()
-                    //window.location.reload();
-                })
-                
-                .then(data => {
-                    console.log(data)
-                    message_container.innerText = data.message
-                    
-                })
-
-            }
-
-        </script>
+        <button id="message" onclick="analyse()" class="btn btn-warning" style="margin: 2%;">Analyse Faces</button>
+        <a href="" id="csv-link" download class="btn btn-info" style="display: none; width: 30%;">Download CSV <i class="fa fa-download"></i></a>
     </div>
+    <script>
+      const analyse = ()=>{
+          var message_container = document.getElementById('message')
+          message_container.innerText = 'Analysing...'
+
+          function getCookie(name) {
+              let cookieValue = null;
+              if (document.cookie && document.cookie !== '') {
+                  const cookies = document.cookie.split(';');
+                  for (let i = 0; i < cookies.length; i++) {
+                      const cookie = cookies[i].trim();
+                      // Does this cookie string begin with the name we want?
+                      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                          break;
+                      }
+                  }
+              }
+              return cookieValue;
+          }
+          var csrftoken = getCookie('csrftoken');
+
+          var attendc = document.getElementById('attendance')
+
+          var attendance = attendc.options[attendc.selectedIndex].value
+          // selected = file_type.options[file_type.selectedIndex].text
+
+
+          post_data = {
+            'attendance' : attendance,
+          }
+
+
+          fetch('/try-attendance', {
+              method: 'POST',
+              credentials: 'same-origin',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'X-Requested-With': 'XMLHttpRequest',
+                  'X-CSRFToken': csrftoken
+              },
+              
+              body: JSON.stringify({'post_data':post_data})
+          })
+          .then(response => {
+              return response.json()
+              //window.location.reload();
+          })
+          
+          .then(data => {
+              console.log(data)
+              message_container.classList.remove('btn-warning')
+              message_container.classList.add('btn-success')
+
+              message_container.innerText = data.message
+
+
+              var link = document.getElementById('csv-link')
+
+              link.href = data.csv_path;
+              link.style.display = 'block';
+           
+              
+          })
+
+      }
+
+  </script>
 </section>
 {% endblock content %}
 

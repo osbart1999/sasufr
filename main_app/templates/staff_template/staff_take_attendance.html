@@ -6,8 +6,8 @@
 <section class="content">
     <div class="container-fluid">
         {% if message %}
-            <div class="alert alert-danger">
-               <p style="color: red;">
+            <div class="alert alert-info">
+               <p>
                 {{message}}
 
                </p> 
@@ -35,7 +35,7 @@
                                 <option value="">----</option>
                                 {% for subject in subjects  %}
                                 {% comment %} <option value="{{subject.id}}">{{subject.name}}</option> {% endcomment %}
-                                <option value="{{subject.name}}">{{subject.name}}</option>
+                                <option value="{{subject.id}}">{{subject.name}}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -47,7 +47,7 @@
                                 <option value="">----</option>
                                 {% for session in sessions  %}
                                 {% comment %} <option value="{{session.id}}">{{session}} </option> {% endcomment %}
-                                <option value="{{session.name}}">{{session}} </option>
+                                <option value="{{session.id}}">{{session}} </option>
                                 {% endfor %}
                             </select>
                         </div>

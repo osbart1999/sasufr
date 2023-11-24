@@ -163,15 +163,19 @@ class Subject(models.Model):
         return self.name
 
 class Attendance(models.Model):
-    session = models.CharField(max_length=200)
-    subject = models.CharField(max_length=200)
+    session = models.ForeignKey(Session, on_delete=models.DO_NOTHING, null=True)
+    subject = models.ForeignKey(Subject, on_delete=models.DO_NOTHING, null=True)
     date = models.DateField()
     file = models.FileField(upload_to='attendance_files/', null=True, blank=True)  # Change 'attendance_files/' to your desired upload directory
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.session
+        return f'Attendance for {self.session.start_year}'
+    
+    def attendance_name(self):
+        name = f'{self.subject.name} Attendance for {self.session.start_year} to {self.session.end_year}'
+        return name
 
 class StudentAttendance(models.Model):
     student  = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='attendanciees')

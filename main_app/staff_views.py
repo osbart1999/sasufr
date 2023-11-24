@@ -25,6 +25,7 @@ from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 from .forms import *
 from .models import *
+import csv
 
 
 from .analyse import *
@@ -136,8 +137,12 @@ def collect_attendance(request):
     if request.POST:
         new_attendance = Attendance()
 
-        new_attendance.subject = request.POST.get('subject')
-        new_attendance.session = request.POST.get('session')
+        subject = Subject.objects.get(id=int(request.POST.get('subject')))
+        new_attendance.subject = subject
+
+        session = Session.objects.get(id=int(request.POST.get('session')))
+
+        new_attendance.session = session
         new_attendance.date = datetime.today()
         
         new_attendance.file = request.FILES.get('video')
@@ -146,6 +151,8 @@ def collect_attendance(request):
         
         try:
             new_attendance.save()
+            message = 'Attendance Successfully taken'
+            context['message'] = message
             print('it worked')
         except:
             message = 'Could not save your attendance'
@@ -157,11 +164,12 @@ def collect_attendance(request):
         
 
 
+
 def make_attendance(request):
     attendances = Attendance.objects.all().order_by('-created_at')
     print(attendances)
     context = {
-
+        'page_title': 'Make Attendance',
         'attendances': attendances,
         'title' : 'Make Attendance'
     }
@@ -187,31 +195,30 @@ def make_attendance(request):
     
 def anylse_all_faces(request):
 
-    attendances = Attendance.objects.all().order_by('-created_at')
+    attendance_data = json.load(request)['post_data']
+    attendance_id = attendance_data.get('attendance')
+
+    # attendances = Attendance.objects.all().order_by('-created_at')
     # settings for face recorgnition algorithms
     dataset_path = os.path.join(settings.BASE_DIR, 'media/training')
     detector_path = os.path.join(settings.BASE_DIR, 'cascades/haarcascade_frontalface_default.xml')
     trainer_path = os.path.join(settings.BASE_DIR, 'trainer/trainer.yml')
+
+    def videos_path(url):
+        return os.path.join(BASE_DIR, url)
 
     # initialise detector and trainer files
     detector = cv.CascadeClassifier(detector_path)
     recorgniser = cv.face.LBPHFaceRecognizer_create()
     recorgniser.read(trainer_path)
 
-    attendance = Attendance.objects.filter()
 
-    
-    # get current attendance
-                  #Change This
-    """
-    # get students from db
-    subject_id = request.POST.get('subject')
-    session_id = request.POST.get('session')
-    subject = get_object_or_404(Subject, id=subject_id)
-    session = get_object_or_404(Session, id=session_id)
-    students = Student.objects.filter(course_id=subject.course.id, session=session)
-    """
-    students = Student.objects.all()
+
+    cur_attendance = Attendance.objects.get(id=attendance_id)
+
+    session = cur_attendance.session
+
+    students = Student.objects.filter(session=session)
 
 
     print('Students', students)
@@ -225,32 +232,31 @@ def anylse_all_faces(request):
 
 
     
-    cur_attendance = Attendance.objects.get(id=1)
     
     # Extract Images from  a video
-    sub = cur_attendance.subject
-    ses = cur_attendance.session
-    dat = cur_attendance.date
-    fil = cur_attendance.file
-    
-    print(sub)
-    print(ses)
-    print(dat)
-    print(fil)
 
-    
-    cap = cv.VideoCapture(str(cur_attendance.file))    
+    video_path = videos_path(cur_attendance.file.url)
+
+    video_rel_path = video_path.strip('/media')
+
+    final_path = 'a'+video_rel_path
+
+    media_root = settings.MEDIA_ROOT
+
+    full_path = os.path.join(media_root,final_path)
+
+
+    cap = cv.VideoCapture(str(full_path))
     
     minWin = 0.1*cap.get(3) 
     minHei = 0.1*cap.get(3) 
 
-    print('video..', cap)
-
 
     
-    print(attendances)
+    # print(attendances)
     while True:
         ret, frame = cap.read()
+
         gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
         # faces = face_recognition(frame)
 
@@ -289,7 +295,7 @@ def anylse_all_faces(request):
                             pass
                         else:
                             StudentAttendance.objects.create(student=cur_student, attendance=cur_attendance, date_taken=cur_date)
-
+                            print('crerated')
                     except:
                         pass
 
@@ -300,8 +306,28 @@ def anylse_all_faces(request):
                     # print('No student ')
         break
 
+    # query
+    attendesee = StudentAttendance.objects.filter(attendance=cur_attendance)
+
+    csv_file_path = settings.MEDIA_ROOT + '/attendance_csvs/'
+    file_name = f'present_students_for_{cur_attendance.subject}_on_{cur_attendance.date}.csv'
+    csv_path = csv_file_path + file_name
+
+    with open(csv_path, 'w', newline='') as csvfile:
+        filewriter = csv.writer(csvfile, delimiter=',',
+                                quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        filewriter.writerow(['First_Name', 'Last_Name'])
+
+        for stdnt in attendesee:
+            filewriter.writerow([stdnt.student.admin.first_name, stdnt.student.admin.last_name])
+        
+        print('CSV created successfully...')
+    
+    rel_csv_path = '/media/attendance_csvs/' + file_name
+
     data = {
-        'message' : 'Finished Taking attendnce....'
+        'message' : 'Finished!',
+        'csv_path' : rel_csv_path
     }
 
     return JsonResponse(data)
